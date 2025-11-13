@@ -1,11 +1,12 @@
 package application
 
 import (
-	"PrService/src/internal/application/mocks"
-	"PrService/src/internal/domain"
 	"context"
 	"errors"
 	"testing"
+
+	"PrService/src/internal/application/mocks"
+	"PrService/src/internal/domain"
 
 	"go.uber.org/mock/gomock"
 )
@@ -46,10 +47,10 @@ func TestUserService_SetIsActive_Success(t *testing.T) {
 
 	if updatedUser == nil {
 		t.Fatal("expected non-nil user")
-	}
-
-	if !updatedUser.IsActive {
-		t.Errorf("expected IsActive == true, got %v", updatedUser.IsActive)
+	} else {
+		if !updatedUser.IsActive {
+			t.Errorf("expected IsActive == true, got %v", updatedUser.IsActive)
+		}
 	}
 
 	if updatedUser != user {

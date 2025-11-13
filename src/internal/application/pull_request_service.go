@@ -1,11 +1,12 @@
 package application
 
 import (
-	"PrService/src/internal/domain"
 	"context"
 	"math/rand/v2"
 	"slices"
 	"time"
+
+	"PrService/src/internal/domain"
 )
 
 type PullRequestService struct {
@@ -30,32 +31,28 @@ func (s *PullRequestService) Create(
 	ctx context.Context,
 	id domain.PullRequestID,
 	pullRequestName string,
-	authorId domain.UserID,
+	userID domain.UserID,
 ) (*domain.PullRequest, error) {
 	now := time.Now()
 	// todo реализовать needMoreReviewers
 	var pullRequest = &domain.PullRequest{
 		ID:                id,
 		Name:              pullRequestName,
-		AuthorID:          authorId,
+		AuthorID:          userID,
 		Status:            domain.PullRequestStatusOpen,
 		AssignedReviewers: []domain.UserID{},
 		CreatedAt:         &now,
 		MergedAt:          nil,
 	}
 	err := s.txManager.WithinTransaction(ctx, func(txCtx context.Context) error {
-		team, err := s.teamRepository.GetByUserID(txCtx, authorId)
+		team, err := s.teamRepository.GetByUserID(txCtx, userID)
 		if err != nil {
 			return err
 		}
 
-		pullRequest.AssignedReviewers = assignReviewers(authorId, *team)
+		pullRequest.AssignedReviewers = assignReviewers(userID, *team)
 
-		if err := s.pullRequestRepository.Create(txCtx, pullRequest); err != nil {
-			return err
-		}
-
-		return nil
+		return s.pullRequestRepository.Create(txCtx, pullRequest)
 	})
 
 	if err != nil {
@@ -65,7 +62,7 @@ func (s *PullRequestService) Create(
 	return pullRequest, nil
 }
 
-func assignReviewers(authorId domain.UserID, team domain.Team) []domain.UserID {
+func assignReviewers(authorID domain.UserID, team domain.Team) []domain.UserID {
 	members := append([]domain.TeamMember(nil), team.Members...)
 	reviewers := make([]domain.UserID, 0)
 	rand.Shuffle(len(members), func(i, j int) {
@@ -73,7 +70,7 @@ func assignReviewers(authorId domain.UserID, team domain.Team) []domain.UserID {
 	})
 
 	for _, member := range members {
-		if member.ID == authorId || !member.IsActive {
+		if member.ID == authorID || !member.IsActive {
 			continue
 		}
 
@@ -109,7 +106,7 @@ func (s *PullRequestService) Merge(ctx context.Context, id domain.PullRequestID)
 	return err
 }
 
-func (s *PullRequestService) Reassign(ctx context.Context, id domain.PullRequestID, oldRevId domain.UserID) (*domain.PullRequest, domain.UserID, error) {
+func (s *PullRequestService) Reassign(ctx context.Context, id domain.PullRequestID, oldRevID domain.UserID) (*domain.PullRequest, domain.UserID, error) {
 	var pullRequest *domain.PullRequest
 	var newReviewer domain.UserID
 	err := s.txManager.WithinTransaction(ctx, func(txCtx context.Context) error {
@@ -122,16 +119,16 @@ func (s *PullRequestService) Reassign(ctx context.Context, id domain.PullRequest
 			return domain.ErrReassignMergedPullRequest
 		}
 
-		if !slices.Contains(pr.AssignedReviewers, oldRevId) {
+		if !slices.Contains(pr.AssignedReviewers, oldRevID) {
 			return domain.ErrReviewerIsNotAssigned
 		}
 
-		team, err := s.teamRepository.GetByUserID(txCtx, oldRevId)
+		team, err := s.teamRepository.GetByUserID(txCtx, oldRevID)
 		if err != nil {
 			return err
 		}
 
-		newReviewers, newRevID, err := reassignReviewers(pr.AuthorID, oldRevId, pr.AssignedReviewers, *team)
+		newReviewers, newRevID, err := reassignReviewers(pr.AuthorID, oldRevID, pr.AssignedReviewers, *team)
 		if err != nil {
 			return err
 		}
@@ -154,7 +151,7 @@ func (s *PullRequestService) Reassign(ctx context.Context, id domain.PullRequest
 	return pullRequest, newReviewer, nil
 }
 
-func reassignReviewers(authorId, oldRevId domain.UserID, oldReviewers []domain.UserID, team domain.Team) ([]domain.UserID, domain.UserID, error) {
+func reassignReviewers(authorID, oldRevID domain.UserID, oldReviewers []domain.UserID, team domain.Team) ([]domain.UserID, domain.UserID, error) {
 	members := append([]domain.TeamMember(nil), team.Members...)
 	newReviewers := make([]domain.UserID, 0)
 	rand.Shuffle(len(members), func(i, j int) {
@@ -162,7 +159,7 @@ func reassignReviewers(authorId, oldRevId domain.UserID, oldReviewers []domain.U
 	})
 
 	for _, reviewer := range oldReviewers {
-		if reviewer == oldRevId {
+		if reviewer == oldRevID {
 			continue
 		}
 
@@ -171,7 +168,7 @@ func reassignReviewers(authorId, oldRevId domain.UserID, oldReviewers []domain.U
 
 	var newReviewer domain.UserID
 	for _, member := range members {
-		if member.ID == authorId || !member.IsActive || member.ID == oldRevId {
+		if member.ID == authorID || !member.IsActive || member.ID == oldRevID {
 			continue
 		}
 

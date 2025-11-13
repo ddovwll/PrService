@@ -1,8 +1,9 @@
 package application
 
 import (
-	"PrService/src/internal/domain"
 	"context"
+
+	"PrService/src/internal/domain"
 )
 
 type TeamService struct {
@@ -35,11 +36,7 @@ func (s *TeamService) Create(ctx context.Context, team *domain.Team) (*domain.Te
 			users = append(users, user)
 		}
 
-		if err := s.userRepository.UpsertBatch(txCtx, users); err != nil {
-			return err
-		}
-
-		return nil
+		return s.userRepository.UpsertBatch(txCtx, users)
 	})
 
 	if err != nil {

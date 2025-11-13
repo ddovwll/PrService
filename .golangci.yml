@@ -1,0 +1,68 @@
+version: "2"
+
+run:
+  go: "1.25"
+  timeout: 5m
+  modules-download-mode: readonly
+  allow-parallel-runners: true
+  tests: true
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    gofmt:
+      simplify: true
+    goimports:
+      local-prefixes:
+        - PrService
+
+linters:
+  default: none
+  enable:
+    - contextcheck
+    - copyloopvar
+    - errcheck
+    - errorlint
+    - goconst
+    - govet
+    - ineffassign
+    - nolintlint
+    - sqlclosecheck
+    - staticcheck
+    - revive
+  settings:
+    errcheck:
+      check-type-assertions: true
+      check-blank: true
+    goconst:
+      min-len: 3
+      min-occurrences: 3
+    staticcheck:
+      checks:
+        - all
+        - -ST1000
+        - -ST1003
+    revive:
+      severity: warning
+      rules:
+        - name: blank-imports
+        - name: indent-error-flow
+        - name: if-return
+        - name: range-val-in-closure
+        - name: receiver-naming
+        - name: var-naming
+        - name: error-return
+        - name: superfluous-else
+    nolintlint:
+      require-explanation: true
+      allow-unused: false
+  exclusions:
+    generated: lax
+    paths:
+      - src/internal/application/mocks
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0

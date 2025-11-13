@@ -1,12 +1,13 @@
 package application
 
 import (
-	"PrService/src/internal/application/mocks"
-	"PrService/src/internal/domain"
 	"context"
 	"errors"
 	"slices"
 	"testing"
+
+	"PrService/src/internal/application/mocks"
+	"PrService/src/internal/domain"
 
 	"go.uber.org/mock/gomock"
 )
@@ -77,7 +78,6 @@ func TestAssignReviewers_Table(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got := assignReviewers(tt.authorID, tt.team)
 
@@ -200,7 +200,6 @@ func TestReassignReviewers_Table(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			gotReviewers, gotNewRev, err := reassignReviewers(tt.authorID, tt.oldRevID, tt.oldReviewers, tt.team)
 
@@ -308,10 +307,10 @@ func TestPullRequestService_Create_Success(t *testing.T) {
 
 	if pr == nil {
 		t.Fatal("expected non-nil pull request")
-	}
-
-	if pr.ID != prID {
-		t.Errorf("expected ID %s, got %s", prID, pr.ID)
+	} else {
+		if pr.ID != prID {
+			t.Errorf("expected ID %s, got %s", prID, pr.ID)
+		}
 	}
 }
 

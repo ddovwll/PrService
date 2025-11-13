@@ -1,12 +1,13 @@
 package application
 
 import (
-	"PrService/src/internal/application/mocks"
-	"PrService/src/internal/domain"
 	"context"
 	"errors"
 	"reflect"
 	"testing"
+
+	"PrService/src/internal/application/mocks"
+	"PrService/src/internal/domain"
 
 	"go.uber.org/mock/gomock"
 )

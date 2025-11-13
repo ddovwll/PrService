@@ -1,10 +1,11 @@
 package data
 
 import (
-	"PrService/src/internal/application"
 	"context"
 	"database/sql"
 	"fmt"
+
+	"PrService/src/internal/application"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -31,14 +32,10 @@ func (m *txManager) WithinTransaction(ctx context.Context, fn func(ctx context.C
 
 	if err := fn(ctxWithTx); err != nil {
 		if rbErr := tx.Rollback(); rbErr != nil {
-			return fmt.Errorf("rollback error: %v (original: %w)", rbErr, err)
+			return fmt.Errorf("rollback error: %w (original: %w)", rbErr, err)
 		}
 		return err
 	}
 
-	if err := tx.Commit(); err != nil {
-		return err
-	}
-
-	return nil
+	return tx.Commit()
 }

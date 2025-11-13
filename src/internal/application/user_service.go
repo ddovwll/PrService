@@ -1,8 +1,9 @@
 package application
 
 import (
-	"PrService/src/internal/domain"
 	"context"
+
+	"PrService/src/internal/domain"
 )
 
 type UserService struct {
@@ -20,8 +21,8 @@ func NewUserService(
 	}
 }
 
-func (s *UserService) SetIsActive(ctx context.Context, userId domain.UserID, isActive bool) (*domain.User, error) {
-	user, err := s.userRepository.GetByID(ctx, userId)
+func (s *UserService) SetIsActive(ctx context.Context, userID domain.UserID, isActive bool) (*domain.User, error) {
+	user, err := s.userRepository.GetByID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -36,8 +37,8 @@ func (s *UserService) SetIsActive(ctx context.Context, userId domain.UserID, isA
 	return user, nil
 }
 
-func (s *UserService) GetPrs(ctx context.Context, userId domain.UserID) ([]domain.PullRequest, error) {
-	prs, err := s.pullRequestRepository.ListByReviewer(ctx, userId)
+func (s *UserService) GetPrs(ctx context.Context, userID domain.UserID) ([]domain.PullRequest, error) {
+	prs, err := s.pullRequestRepository.ListByReviewer(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
