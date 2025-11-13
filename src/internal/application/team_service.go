@@ -1,0 +1,54 @@
+package application
+
+import (
+	"PrService/src/internal/domain"
+	"context"
+)
+
+type TeamService struct {
+	teamRepository domain.TeamRepository
+	userRepository domain.UserRepository
+	txManager      TxManager
+}
+
+func NewTeamService(
+	teamRepository domain.TeamRepository,
+	userRepository domain.UserRepository,
+	txManager TxManager,
+) *TeamService {
+	return &TeamService{
+		teamRepository: teamRepository,
+		userRepository: userRepository,
+		txManager:      txManager,
+	}
+}
+
+func (s *TeamService) Create(ctx context.Context, team *domain.Team) (*domain.Team, error) {
+	err := s.txManager.WithinTransaction(ctx, func(txCtx context.Context) error {
+		if err := s.teamRepository.Create(txCtx, team.Name); err != nil {
+			return err
+		}
+
+		users := make([]domain.User, 0, len(team.Members))
+		for _, member := range team.Members {
+			user := member.ToUser(team.Name)
+			users = append(users, user)
+		}
+
+		if err := s.userRepository.UpsertBatch(txCtx, users); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return team, nil
+}
+
+func (s *TeamService) Get(ctx context.Context, name domain.TeamName) (*domain.Team, error) {
+	return s.teamRepository.GetByName(ctx, name)
+}
