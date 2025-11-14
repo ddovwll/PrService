@@ -2,20 +2,21 @@ package data
 
 import (
 	"context"
-	"database/sql"
+	"errors"
 	"fmt"
 
-	"PrService/src/internal/application"
+	"PrService/src/internal/application/contracts"
 
-	"github.com/jmoiron/sqlx"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type txManager struct {
-	db *sqlx.DB
+	pool *pgxpool.Pool
 }
 
-func NewSQLXManager(db *sqlx.DB) application.TxManager {
-	return &txManager{db: db}
+func NewTxManager(pool *pgxpool.Pool) contracts.TxManager {
+	return &txManager{pool: pool}
 }
 
 type contextKey struct{}
@@ -23,7 +24,7 @@ type contextKey struct{}
 var txKey = contextKey{}
 
 func (m *txManager) WithinTransaction(ctx context.Context, fn func(ctx context.Context) error) error {
-	tx, err := m.db.BeginTxx(ctx, &sql.TxOptions{})
+	tx, err := m.pool.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
 		return err
 	}
@@ -31,11 +32,20 @@ func (m *txManager) WithinTransaction(ctx context.Context, fn func(ctx context.C
 	ctxWithTx := context.WithValue(ctx, txKey, tx)
 
 	if err := fn(ctxWithTx); err != nil {
-		if rbErr := tx.Rollback(); rbErr != nil {
+		if rbErr := tx.Rollback(ctx); rbErr != nil && !errors.Is(rbErr, pgx.ErrTxClosed) {
 			return fmt.Errorf("rollback error: %w (original: %w)", rbErr, err)
 		}
 		return err
 	}
 
-	return tx.Commit()
+	return tx.Commit(ctx)
+}
+
+func txFromContext(ctx context.Context) pgx.Tx {
+	if v := ctx.Value(txKey); v != nil {
+		if tx, ok := v.(pgx.Tx); ok {
+			return tx
+		}
+	}
+	return nil
 }

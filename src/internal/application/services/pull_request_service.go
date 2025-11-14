@@ -1,4 +1,4 @@
-package application
+package services
 
 import (
 	"context"
@@ -6,19 +6,21 @@ import (
 	"slices"
 	"time"
 
+	"PrService/src/internal/application/contracts"
+
 	"PrService/src/internal/domain"
 )
 
 type PullRequestService struct {
 	pullRequestRepository domain.PullRequestRepository
 	teamRepository        domain.TeamRepository
-	txManager             TxManager
+	txManager             contracts.TxManager
 }
 
 func NewPullRequestService(
 	pullRequestRepository domain.PullRequestRepository,
 	teamRepository domain.TeamRepository,
-	txManager TxManager,
+	txManager contracts.TxManager,
 ) *PullRequestService {
 	return &PullRequestService{
 		pullRequestRepository: pullRequestRepository,
@@ -34,7 +36,6 @@ func (s *PullRequestService) Create(
 	userID domain.UserID,
 ) (*domain.PullRequest, error) {
 	now := time.Now()
-	// todo реализовать needMoreReviewers
 	var pullRequest = &domain.PullRequest{
 		ID:                id,
 		Name:              pullRequestName,
@@ -84,7 +85,8 @@ func assignReviewers(authorID domain.UserID, team domain.Team) []domain.UserID {
 	return reviewers
 }
 
-func (s *PullRequestService) Merge(ctx context.Context, id domain.PullRequestID) error {
+func (s *PullRequestService) Merge(ctx context.Context, id domain.PullRequestID) (*domain.PullRequest, error) {
+	var pullRequest *domain.PullRequest
 	err := s.txManager.WithinTransaction(ctx, func(txCtx context.Context) error {
 		now := time.Now()
 
@@ -94,19 +96,29 @@ func (s *PullRequestService) Merge(ctx context.Context, id domain.PullRequestID)
 		}
 
 		if pr.Status == domain.PullRequestStatusMerged {
+			pullRequest = pr
 			return nil
 		}
 
 		pr.Status = domain.PullRequestStatusMerged
 		pr.MergedAt = &now
+		pullRequest = pr
 
 		return s.pullRequestRepository.Update(txCtx, pr)
 	})
 
-	return err
+	if err != nil {
+		return nil, err
+	}
+
+	return pullRequest, nil
 }
 
-func (s *PullRequestService) Reassign(ctx context.Context, id domain.PullRequestID, oldRevID domain.UserID) (*domain.PullRequest, domain.UserID, error) {
+func (s *PullRequestService) Reassign(
+	ctx context.Context,
+	id domain.PullRequestID,
+	oldRevID domain.UserID,
+) (*domain.PullRequest, domain.UserID, error) {
 	var pullRequest *domain.PullRequest
 	var newReviewer domain.UserID
 	err := s.txManager.WithinTransaction(ctx, func(txCtx context.Context) error {
@@ -151,7 +163,12 @@ func (s *PullRequestService) Reassign(ctx context.Context, id domain.PullRequest
 	return pullRequest, newReviewer, nil
 }
 
-func reassignReviewers(authorID, oldRevID domain.UserID, oldReviewers []domain.UserID, team domain.Team) ([]domain.UserID, domain.UserID, error) {
+func reassignReviewers(
+	authorID,
+	oldRevID domain.UserID,
+	oldReviewers []domain.UserID,
+	team domain.Team,
+) ([]domain.UserID, domain.UserID, error) {
 	members := append([]domain.TeamMember(nil), team.Members...)
 	newReviewers := make([]domain.UserID, 0)
 	rand.Shuffle(len(members), func(i, j int) {

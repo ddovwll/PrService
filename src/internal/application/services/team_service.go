@@ -1,7 +1,9 @@
-package application
+package services
 
 import (
 	"context"
+
+	"PrService/src/internal/application/contracts"
 
 	"PrService/src/internal/domain"
 )
@@ -9,13 +11,13 @@ import (
 type TeamService struct {
 	teamRepository domain.TeamRepository
 	userRepository domain.UserRepository
-	txManager      TxManager
+	txManager      contracts.TxManager
 }
 
 func NewTeamService(
 	teamRepository domain.TeamRepository,
 	userRepository domain.UserRepository,
-	txManager TxManager,
+	txManager contracts.TxManager,
 ) *TeamService {
 	return &TeamService{
 		teamRepository: teamRepository,

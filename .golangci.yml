@@ -32,6 +32,8 @@ linters:
     - sqlclosecheck
     - staticcheck
     - revive
+    - sloglint
+    - lll
   settings:
     errcheck:
       check-type-assertions: true
@@ -58,6 +60,14 @@ linters:
     nolintlint:
       require-explanation: true
       allow-unused: false
+    sloglint:
+      kv-only: true
+      msg-style: lowercased
+      key-naming-case: snake
+      no-global: all
+    lll:
+      tab-width: 1
+      line-length: 120
   exclusions:
     generated: lax
     paths:

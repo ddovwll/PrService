@@ -1,4 +1,4 @@
-package application
+package services
 
 import (
 	"context"
@@ -483,9 +483,16 @@ func TestPullRequestService_Merge_Success(t *testing.T) {
 			return nil
 		})
 
-	err := service.Merge(ctx, prID)
+	got, err := service.Merge(ctx, prID)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if got == nil {
+		t.Fatalf("expected non-nil pull request")
+	}
+	if got.Status != domain.PullRequestStatusMerged {
+		t.Errorf("expected MERGED, got %s", got.Status)
 	}
 }
 
@@ -519,9 +526,17 @@ func TestPullRequestService_Merge_AlreadyMerged(t *testing.T) {
 		GetByID(gomock.Any(), prID).
 		Return(pr, nil)
 
-	err := service.Merge(ctx, prID)
+	got, err := service.Merge(ctx, prID)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if got == nil {
+		t.Fatalf("expected non-nil result")
+	}
+
+	if got.Status != domain.PullRequestStatusMerged {
+		t.Errorf("expected MERGED, got %s", got.Status)
 	}
 }
 
@@ -537,7 +552,6 @@ func TestPullRequestService_Merge_GetByIDError(t *testing.T) {
 
 	ctx := context.Background()
 	prID := domain.PullRequestID("pr-1")
-
 	expectedErr := errors.New("get pr error")
 
 	txMgr.
@@ -552,12 +566,15 @@ func TestPullRequestService_Merge_GetByIDError(t *testing.T) {
 		GetByID(gomock.Any(), prID).
 		Return(nil, expectedErr)
 
-	err := service.Merge(ctx, prID)
+	result, err := service.Merge(ctx, prID)
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
 	if !errors.Is(err, expectedErr) {
 		t.Fatalf("expected %v, got %v", expectedErr, err)
+	}
+	if result != nil {
+		t.Fatal("expected result to be nil on error")
 	}
 }
 
@@ -573,7 +590,6 @@ func TestPullRequestService_Merge_TxError(t *testing.T) {
 
 	ctx := context.Background()
 	prID := domain.PullRequestID("pr-1")
-
 	expectedErr := errors.New("tx error")
 
 	txMgr.
@@ -581,12 +597,15 @@ func TestPullRequestService_Merge_TxError(t *testing.T) {
 		WithinTransaction(ctx, gomock.Any()).
 		Return(expectedErr)
 
-	err := service.Merge(ctx, prID)
+	result, err := service.Merge(ctx, prID)
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
 	if !errors.Is(err, expectedErr) {
 		t.Fatalf("expected %v, got %v", expectedErr, err)
+	}
+	if result != nil {
+		t.Fatal("expected nil result on tx error")
 	}
 }
 
