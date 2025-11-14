@@ -49,8 +49,8 @@ func (c *TeamController) add(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, domain.ErrTeamAlreadyExists) {
 			c.writeError(ctx, w, http.StatusBadRequest,
 				models.ErrorCodeTeamExists,
-				fmt.Sprintf("%s already exists", team.Name),
-				"failed to write Create Team response",
+				fmt.Sprintf("%s already exists", req.TeamName),
+				"team already exists",
 				err,
 				"team_name", req.TeamName,
 			)
@@ -81,8 +81,8 @@ func (c *TeamController) get(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, domain.ErrTeamNotFound) {
 			c.writeError(ctx, w, http.StatusNotFound,
 				models.ErrorCodeNotFound,
-				fmt.Sprintf("%s already exists", team.Name),
-				"failed to write Create Team response",
+				"resource not found",
+				"team not found",
 				err,
 				"team_name", teamName,
 			)

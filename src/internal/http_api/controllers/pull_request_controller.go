@@ -60,6 +60,16 @@ func (c *PullRequestController) create(w http.ResponseWriter, r *http.Request) {
 			)
 			return
 		}
+		if errors.Is(err, domain.ErrTeamNotFound) {
+			c.writeError(ctx, w, http.StatusNotFound,
+				models.ErrorCodeNotFound,
+				"resource not found",
+				"team not found to create pull request",
+				err,
+				"pr_id", req.PullRequestID,
+			)
+			return
+		}
 		if errors.Is(err, domain.ErrPullRequestExists) {
 			c.writeError(ctx, w, http.StatusConflict,
 				models.ErrorCodePRExists,
@@ -89,7 +99,7 @@ func (c *PullRequestController) merge(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var req models.MergePullRequestRequest
-	if ok := c.decodeAndValidate(ctx, w, r, &req, "createPullRequestRequest"); !ok {
+	if ok := c.decodeAndValidate(ctx, w, r, &req, "MergePullRequestRequest"); !ok {
 		return
 	}
 
@@ -135,11 +145,22 @@ func (c *PullRequestController) reassign(w http.ResponseWriter, r *http.Request)
 	)
 
 	if err != nil {
-		if errors.Is(err, domain.ErrPullRequestNotFound) || errors.Is(err, domain.ErrUserNotFound) {
+		if errors.Is(err, domain.ErrPullRequestNotFound) {
 			c.writeError(ctx, w, http.StatusNotFound,
 				models.ErrorCodeNotFound,
 				"resource not found",
-				err.Error(),
+				"pr not found",
+				err,
+				"pr_id", req.PullRequestID,
+				"user_id", req.OldUserID,
+			)
+			return
+		}
+		if errors.Is(err, domain.ErrUserNotFound) {
+			c.writeError(ctx, w, http.StatusNotFound,
+				models.ErrorCodeNotFound,
+				"resource not found",
+				"user not found",
 				err,
 				"pr_id", req.PullRequestID,
 				"user_id", req.OldUserID,

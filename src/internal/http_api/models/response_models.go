@@ -148,8 +148,8 @@ func MapToPullRequestResponse(pr domain.PullRequest) PullRequestResponse {
 		AuthorID:          string(pr.AuthorID),
 		Status:            string(pr.Status),
 		AssignedReviewers: reviewers,
-		CreatedAt:         nil,
-		MergedAt:          nil,
+		CreatedAt:         pr.CreatedAt,
+		MergedAt:          pr.MergedAt,
 	}
 }
 

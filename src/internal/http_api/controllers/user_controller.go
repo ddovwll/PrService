@@ -74,8 +74,19 @@ func (c *UserController) getReview(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	userIDStr := q.Get("user_id")
 
+	if userIDStr == "" {
+		c.writeError(ctx, w, http.StatusBadRequest,
+			models.ErrorCodeValidationFailed,
+			"user_id is required",
+			"missing user_id in query",
+			nil,
+		)
+		return
+	}
+
 	prs, err := c.userService.GetPrs(ctx, domain.UserID(userIDStr))
 	if err != nil {
+		// todo если не нашлось вернуть пустой список
 		c.writeError(ctx, w, http.StatusInternalServerError,
 			models.ErrorCodeInternalServer,
 			"internal server error",
