@@ -36,6 +36,16 @@ type Team struct {
 	Members []TeamMember
 }
 
+type TeamStats struct {
+	TeamName           TeamName
+	MembersCount       int
+	ActiveMembersCount int
+	TotalPRs           int
+	OpenPRs            int
+	MergedPRs          int
+	AvgTimeToMergeSec  int64
+}
+
 type User struct {
 	ID       UserID
 	Username string

@@ -11,6 +11,7 @@ formatters:
   enable:
     - gofmt
     - goimports
+    - swaggo
   settings:
     gofmt:
       simplify: true
@@ -34,6 +35,7 @@ linters:
     - revive
     - sloglint
     - lll
+    - sqlclosecheck
   settings:
     errcheck:
       check-type-assertions: true
@@ -72,6 +74,10 @@ linters:
     paths:
       - src/internal/application/mocks/
       - src/internal/http_api/swagger/
+    rules:
+      - linters:
+          - lll
+        source: "^//"
 
 issues:
   max-issues-per-linter: 0

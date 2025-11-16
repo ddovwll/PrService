@@ -51,3 +51,7 @@ func (s *TeamService) Create(ctx context.Context, team *domain.Team) (*domain.Te
 func (s *TeamService) Get(ctx context.Context, name domain.TeamName) (*domain.Team, error) {
 	return s.teamRepository.GetByName(ctx, name)
 }
+
+func (s *TeamService) GetStats(ctx context.Context, name domain.TeamName) (*domain.TeamStats, error) {
+	return s.teamRepository.GetStats(ctx, name)
+}

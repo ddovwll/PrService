@@ -1,8 +1,9 @@
 //go:build integration
 
-package data
+package integration_tests
 
 import (
+	"PrService/src/internal/infrastructure/data/repositories"
 	"context"
 	"errors"
 	"testing"
@@ -14,7 +15,7 @@ func TestPullRequestRepository_Create_And_GetByID_WithReviewers(t *testing.T) {
 	ctx := context.Background()
 	truncateAll(t, ctx)
 
-	repo := NewPullRequestRepository(testPool)
+	repo := repositories.NewPullRequestRepository(testPool)
 
 	teamName := domain.TeamName("backend")
 	insertTeam(t, ctx, teamName)
@@ -94,7 +95,7 @@ func TestPullRequestRepository_Create_NoReviewers(t *testing.T) {
 	ctx := context.Background()
 	truncateAll(t, ctx)
 
-	repo := NewPullRequestRepository(testPool)
+	repo := repositories.NewPullRequestRepository(testPool)
 
 	teamName := domain.TeamName("backend")
 	insertTeam(t, ctx, teamName)
@@ -135,7 +136,7 @@ func TestPullRequestRepository_Create_DuplicateID_ReturnsErrPullRequestExists(t 
 	ctx := context.Background()
 	truncateAll(t, ctx)
 
-	repo := NewPullRequestRepository(testPool)
+	repo := repositories.NewPullRequestRepository(testPool)
 
 	teamName := domain.TeamName("backend")
 	insertTeam(t, ctx, teamName)
@@ -173,7 +174,7 @@ func TestPullRequestRepository_GetByID_NotFound(t *testing.T) {
 	ctx := context.Background()
 	truncateAll(t, ctx)
 
-	repo := NewPullRequestRepository(testPool)
+	repo := repositories.NewPullRequestRepository(testPool)
 
 	_, err := repo.GetByID(ctx, domain.PullRequestID("no-such-pr"))
 	if err == nil {
@@ -188,7 +189,7 @@ func TestPullRequestRepository_ListByReviewer(t *testing.T) {
 	ctx := context.Background()
 	truncateAll(t, ctx)
 
-	repo := NewPullRequestRepository(testPool)
+	repo := repositories.NewPullRequestRepository(testPool)
 
 	teamName := domain.TeamName("backend")
 	insertTeam(t, ctx, teamName)
@@ -297,7 +298,7 @@ func TestPullRequestRepository_Update_Success_ReplaceReviewers(t *testing.T) {
 	ctx := context.Background()
 	truncateAll(t, ctx)
 
-	repo := NewPullRequestRepository(testPool)
+	repo := repositories.NewPullRequestRepository(testPool)
 
 	teamName := domain.TeamName("backend")
 	insertTeam(t, ctx, teamName)
@@ -384,7 +385,7 @@ func TestPullRequestRepository_Update_NotFound(t *testing.T) {
 	ctx := context.Background()
 	truncateAll(t, ctx)
 
-	repo := NewPullRequestRepository(testPool)
+	repo := repositories.NewPullRequestRepository(testPool)
 
 	pr := &domain.PullRequest{
 		ID:       "non-existent",

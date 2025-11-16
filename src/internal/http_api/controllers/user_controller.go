@@ -5,7 +5,6 @@ import (
 	"log/slog"
 	"net/http"
 
-	"PrService/src/internal/application/services"
 	"PrService/src/internal/domain"
 	"PrService/src/internal/http_api/models"
 
@@ -15,11 +14,11 @@ import (
 
 type UserController struct {
 	baseController
-	userService *services.UserService
+	userService domain.UserService
 }
 
 func NewUserController(
-	userService *services.UserService,
+	userService domain.UserService,
 	validate *validator.Validate,
 	logger *slog.Logger,
 ) *UserController {
@@ -35,17 +34,17 @@ func (c *UserController) UseHandlers(r chi.Router) {
 }
 
 // setIsActive godoc
-// @Summary      Установить флаг активности пользователя
-// @Description  Установить флаг активности пользователя по его идентификатору
-// @Tags         Users
-// @Accept       json
-// @Produce      json
-// @Param        request  body      models.SetUserIsActiveRequest   true  "Set user is_active flag"
-// @Success      200      {object}  models.SetUserIsActiveResponse
-// @Failure      400      {object}  models.ErrorResponse  "invalid request body or validation failed"
-// @Failure      404      {object}  models.ErrorResponse  "user not found"
-// @Failure      500      {object}  models.ErrorResponse  "internal server error"
-// @Router       /users/setIsActive [post]
+//
+//	@Summary	Установить флаг активности пользователя
+//	@Tags		Users
+//	@Accept		json
+//	@Produce	json
+//	@Param		request	body		models.SetUserIsActiveRequest	true "Set is active body"
+//	@Success	200		{object}	models.SetUserIsActiveResponse	"Обновлённый пользователь"
+//	@Failure	400		{object}	models.ErrorResponse			"неверный запрос"
+//	@Failure	404		{object}	models.ErrorResponse			"Пользователь не найден"
+//	@Failure	500		{object}	models.ErrorResponse			"Ошибка сервера"
+//	@Router		/users/setIsActive [post]
 func (c *UserController) setIsActive(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -82,16 +81,16 @@ func (c *UserController) setIsActive(w http.ResponseWriter, r *http.Request) {
 }
 
 // getReview godoc
-// @Summary      Получить PR'ы, где пользователь назначен ревьювером
-// @Description  Вернуть список PR'ов, в которых пользователь назначен ревьювером
-// @Tags         Users
-// @Accept       json
-// @Produce      json
-// @Param        user_id  query     string  true  "Идентификатор пользователя"
-// @Success      200      {object}  models.GetUserReviewsResponse
-// @Failure      400      {object}  models.ErrorResponse  "missing or invalid user_id"
-// @Failure      500      {object}  models.ErrorResponse  "internal server error"
-// @Router       /users/getReview [get]
+//
+//	@Summary	Получить PR'ы, где пользователь назначен ревьювером
+//	@Tags		Users
+//	@Accept		json
+//	@Produce	json
+//	@Param		user_id	query		string							true	"Идентификатор пользователя"
+//	@Success	200		{object}	models.GetUserReviewsResponse	"Список PR'ов пользователя"
+//	@Failure	400		{object}	models.ErrorResponse			"отсутствующий или неверный user_id"
+//	@Failure	500		{object}	models.ErrorResponse			"Ошибка сервера"
+//	@Router		/users/getReview [get]
 func (c *UserController) getReview(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	q := r.URL.Query()

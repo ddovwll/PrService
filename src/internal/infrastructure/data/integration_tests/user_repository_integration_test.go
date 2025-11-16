@@ -1,8 +1,9 @@
 //go:build integration
 
-package data
+package integration_tests
 
 import (
+	"PrService/src/internal/infrastructure/data/repositories"
 	"context"
 	"errors"
 	"testing"
@@ -14,7 +15,7 @@ func TestUserRepository_UpsertBatch_InsertAndGetByID(t *testing.T) {
 	ctx := context.Background()
 	truncateAll(t, ctx)
 
-	repo := NewUserRepository(testPool)
+	repo := repositories.NewUserRepository(testPool)
 
 	teamName := domain.TeamName("backend")
 	insertTeam(t, ctx, teamName)
@@ -53,7 +54,7 @@ func TestUserRepository_UpsertBatch_UpdateExisting(t *testing.T) {
 	ctx := context.Background()
 	truncateAll(t, ctx)
 
-	repo := NewUserRepository(testPool)
+	repo := repositories.NewUserRepository(testPool)
 
 	teamName := domain.TeamName("backend")
 	insertTeam(t, ctx, teamName)
@@ -97,7 +98,7 @@ func TestUserRepository_GetByID_NotFound(t *testing.T) {
 	ctx := context.Background()
 	truncateAll(t, ctx)
 
-	repo := NewUserRepository(testPool)
+	repo := repositories.NewUserRepository(testPool)
 
 	_, err := repo.GetByID(ctx, domain.UserID("non-existent"))
 	if err == nil {
@@ -112,7 +113,7 @@ func TestUserRepository_Update_Success(t *testing.T) {
 	ctx := context.Background()
 	truncateAll(t, ctx)
 
-	repo := NewUserRepository(testPool)
+	repo := repositories.NewUserRepository(testPool)
 
 	teamName := domain.TeamName("backend")
 	insertTeam(t, ctx, teamName)
@@ -152,7 +153,7 @@ func TestUserRepository_Update_NotFound(t *testing.T) {
 	ctx := context.Background()
 	truncateAll(t, ctx)
 
-	repo := NewUserRepository(testPool)
+	repo := repositories.NewUserRepository(testPool)
 
 	user := domain.User{
 		ID:       domain.UserID("ghost"),

@@ -1,18 +1,3 @@
-// Package main provides HTTP API for PR reviewer assignment.
-//
-// @title       PR Reviewer Assignment Service
-// @version     1.0.0
-// @description Service for assigning reviewers to pull requests within teams.
-// @BasePath    /
-//
-// @tag.name    Teams
-// @tag.description Operations with teams and their members
-//
-// @tag.name    Users
-// @tag.description Operations with users and their activity
-//
-// @tag.name    PullRequests
-// @tag.description Operations with pull requests and reviewers
 package main
 
 import (
@@ -24,6 +9,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"PrService/src/internal/infrastructure/data/repositories"
 
 	"PrService/src/internal/application/contracts"
 	"PrService/src/internal/application/services"
@@ -39,6 +26,8 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/jackc/pgx/v5/pgxpool"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
+
+	_ "PrService/src/internal/http_api/swagger"
 )
 
 type App struct {
@@ -63,14 +52,14 @@ func NewApp(cfg *config.Config) (*App, error) {
 	txManager := data.NewTxManager(pool)
 	prService, teamService, userService := initServices(prRepo, teamRepo, userRepo, txManager)
 	validate := validator.New()
-	prController, teamController, userController := initControllers(
+	prController, teamController, userController, healthController := initControllers(
 		prService,
 		teamService,
 		userService,
 		validate,
 		logger,
 	)
-	server := initServer(prController, teamController, userController, logger, cfg.HTTPPort)
+	server := initServer(prController, teamController, userController, healthController, logger, cfg.HTTPPort)
 
 	return &App{
 		cfg:    cfg,
@@ -81,7 +70,7 @@ func NewApp(cfg *config.Config) (*App, error) {
 }
 
 func (a *App) Run(ctx context.Context) error {
-	a.logger.Info("starting server", "addr", a.server.Addr)
+	a.logger.Info("starting server", "addr", "http://localhost:"+a.cfg.HTTPPort)
 
 	errCh := make(chan error, 1)
 	go func() {
@@ -105,10 +94,10 @@ func (a *App) Run(ctx context.Context) error {
 	if err := a.server.Shutdown(shutdownCtx); err != nil {
 		a.logger.Error("server shutdown error", "err", err)
 	}
+	a.logger.Info("server gracefully stopped")
 
 	a.pool.Close()
 	a.logger.Info("pgx pool closed")
-	a.logger.Info("server gracefully stopped")
 
 	return nil
 }
@@ -117,6 +106,7 @@ func initServer(
 	prController *controllers.PullRequestController,
 	teamController *controllers.TeamController,
 	userController *controllers.UserController,
+	healthController *controllers.HealthController,
 	logger *slog.Logger,
 	port string,
 ) *http.Server {
@@ -127,6 +117,7 @@ func initServer(
 	prController.UseHandlers(r)
 	teamController.UseHandlers(r)
 	userController.UseHandlers(r)
+	healthController.UseHandlers(r)
 
 	r.Get("/swagger/*", httpSwagger.WrapHandler)
 
@@ -139,16 +130,22 @@ func initServer(
 }
 
 func initControllers(
-	prService *services.PullRequestService,
-	teamService *services.TeamService,
-	userService *services.UserService,
+	prService domain.PullRequestService,
+	teamService domain.TeamService,
+	userService domain.UserService,
 	validate *validator.Validate,
 	logger *slog.Logger,
-) (*controllers.PullRequestController, *controllers.TeamController, *controllers.UserController) {
+) (
+	*controllers.PullRequestController,
+	*controllers.TeamController,
+	*controllers.UserController,
+	*controllers.HealthController,
+) {
 	prController := controllers.NewPullRequestController(prService, validate, logger)
 	teamController := controllers.NewTeamController(teamService, validate, logger)
 	userController := controllers.NewUserController(userService, validate, logger)
-	return prController, teamController, userController
+	healthController := controllers.NewHealthController(validate, logger)
+	return prController, teamController, userController, healthController
 }
 
 func initServices(
@@ -156,7 +153,7 @@ func initServices(
 	teamRepo domain.TeamRepository,
 	userRepo domain.UserRepository,
 	txManager contracts.TxManager,
-) (*services.PullRequestService, *services.TeamService, *services.UserService) {
+) (domain.PullRequestService, domain.TeamService, domain.UserService) {
 	prService := services.NewPullRequestService(prRepo, teamRepo, txManager)
 	teamService := services.NewTeamService(teamRepo, userRepo, txManager)
 	userService := services.NewUserService(userRepo, prRepo)
@@ -169,9 +166,9 @@ func initRepositories(pool *pgxpool.Pool) (
 	domain.TeamRepository,
 	domain.UserRepository,
 ) {
-	pr := data.NewPullRequestRepository(pool)
-	team := data.NewTeamRepository(pool)
-	user := data.NewUserRepository(pool)
+	pr := repositories.NewPullRequestRepository(pool)
+	team := repositories.NewTeamRepository(pool)
+	user := repositories.NewUserRepository(pool)
 
 	return pr, team, user
 }

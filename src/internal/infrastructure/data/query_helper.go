@@ -9,13 +9,13 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type pgxQuerier interface {
+type PgxQuerier interface {
 	Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error)
 	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
 	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
 }
 
-func querierFromContext(ctx context.Context, pool *pgxpool.Pool) pgxQuerier {
+func QuerierFromContext(ctx context.Context, pool *pgxpool.Pool) PgxQuerier {
 	if tx := txFromContext(ctx); tx != nil {
 		return tx
 	}
@@ -26,7 +26,7 @@ const (
 	pgCodeUniqueViolation = "23505"
 )
 
-func isUniqueViolation(err error) bool {
+func IsUniqueViolation(err error) bool {
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) {
 		return pgErr.Code == pgCodeUniqueViolation
@@ -34,6 +34,6 @@ func isUniqueViolation(err error) bool {
 	return false
 }
 
-func isNoRows(err error) bool {
+func IsNoRows(err error) bool {
 	return errors.Is(err, pgx.ErrNoRows)
 }

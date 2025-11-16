@@ -6,6 +6,7 @@ type TeamRepository interface {
 	Create(ctx context.Context, name TeamName) error
 	GetByName(ctx context.Context, name TeamName) (*Team, error)
 	GetByUserID(ctx context.Context, userID UserID) (*Team, error)
+	GetStats(ctx context.Context, name TeamName) (*TeamStats, error)
 }
 type UserRepository interface {
 	UpsertBatch(ctx context.Context, users []User) error

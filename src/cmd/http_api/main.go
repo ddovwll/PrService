@@ -1,10 +1,12 @@
+// Package main provides HTTP API for PR reviewer assignment.
+//
+// @title		PR Reviewer Assignment Service (Test Task, Fall 2025)
+// @version	1.0.0
 package main
 
 import (
 	"context"
-	"fmt"
 	"log"
-	"os"
 	"os/signal"
 	"syscall"
 
@@ -26,7 +28,6 @@ func main() {
 	}
 
 	if err := app.Run(ctx); err != nil {
-		fmt.Fprintf(os.Stderr, "app stopped with error: %v\n", err)
-		os.Exit(1)
+		log.Fatalf("app stopped with error: %v\n", err)
 	}
 }

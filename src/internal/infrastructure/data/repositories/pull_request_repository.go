@@ -1,7 +1,9 @@
-package data
+package repositories
 
 import (
 	"context"
+
+	"PrService/src/internal/infrastructure/data"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -17,7 +19,7 @@ func NewPullRequestRepository(pool *pgxpool.Pool) *PullRequestRepository {
 }
 
 func (r *PullRequestRepository) Create(ctx context.Context, pr *domain.PullRequest) error {
-	q := querierFromContext(ctx, r.pool)
+	q := data.QuerierFromContext(ctx, r.pool)
 
 	const insertPR = `
 		INSERT INTO pull_requests (
@@ -35,7 +37,7 @@ func (r *PullRequestRepository) Create(ctx context.Context, pr *domain.PullReque
 		pr.MergedAt,
 	)
 	if err != nil {
-		if isUniqueViolation(err) {
+		if data.IsUniqueViolation(err) {
 			return domain.ErrPullRequestExists
 		}
 		return err
@@ -51,7 +53,7 @@ func (r *PullRequestRepository) Create(ctx context.Context, pr *domain.PullReque
 }
 
 func (r *PullRequestRepository) GetByID(ctx context.Context, id domain.PullRequestID) (*domain.PullRequest, error) {
-	q := querierFromContext(ctx, r.pool)
+	q := data.QuerierFromContext(ctx, r.pool)
 
 	const query = `
 		SELECT id, name, author_id, status, created_at, merged_at
@@ -68,7 +70,7 @@ func (r *PullRequestRepository) GetByID(ctx context.Context, id domain.PullReque
 		&pr.CreatedAt,
 		&pr.MergedAt,
 	); err != nil {
-		if isNoRows(err) {
+		if data.IsNoRows(err) {
 			return nil, domain.ErrPullRequestNotFound
 		}
 		return nil, err
@@ -87,7 +89,7 @@ func (r *PullRequestRepository) ListByReviewer(
 	ctx context.Context,
 	reviewerID domain.UserID,
 ) ([]domain.PullRequest, error) {
-	q := querierFromContext(ctx, r.pool)
+	q := data.QuerierFromContext(ctx, r.pool)
 
 	const query = `
 		SELECT pr.id, pr.name, pr.author_id, pr.status, pr.created_at, pr.merged_at
@@ -134,7 +136,7 @@ func (r *PullRequestRepository) ListByReviewer(
 }
 
 func (r *PullRequestRepository) Update(ctx context.Context, pr *domain.PullRequest) error {
-	q := querierFromContext(ctx, r.pool)
+	q := data.QuerierFromContext(ctx, r.pool)
 
 	const updatePR = `
 		UPDATE pull_requests
@@ -168,7 +170,7 @@ func (r *PullRequestRepository) Update(ctx context.Context, pr *domain.PullReque
 
 func (r *PullRequestRepository) replaceAssignedReviewers(
 	ctx context.Context,
-	q pgxQuerier,
+	q data.PgxQuerier,
 	prID domain.PullRequestID,
 	reviewers []domain.UserID,
 ) error {
@@ -201,7 +203,7 @@ func (r *PullRequestRepository) replaceAssignedReviewers(
 
 func (r *PullRequestRepository) loadAssignedReviewers(
 	ctx context.Context,
-	q pgxQuerier,
+	q data.PgxQuerier,
 	prID domain.PullRequestID,
 ) ([]domain.UserID, error) {
 	const query = `

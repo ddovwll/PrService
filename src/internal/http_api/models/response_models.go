@@ -1,8 +1,6 @@
 package models
 
 import (
-	"time"
-
 	"PrService/src/internal/domain"
 )
 
@@ -127,13 +125,13 @@ func MapToGetUserReviewsResponse(userID domain.UserID, prs []domain.PullRequest)
 }
 
 type PullRequestResponse struct {
-	PullRequestID     string     `json:"pull_request_id"`
-	PullRequestName   string     `json:"pull_request_name"`
-	AuthorID          string     `json:"author_id"`
-	Status            string     `json:"status"`
-	AssignedReviewers []string   `json:"assigned_reviewers"`
-	CreatedAt         *time.Time `json:"createdAt,omitempty"`
-	MergedAt          *time.Time `json:"mergedAt,omitempty"`
+	PullRequestID     string   `json:"pull_request_id"`
+	PullRequestName   string   `json:"pull_request_name"`
+	AuthorID          string   `json:"author_id"`
+	Status            string   `json:"status"`
+	AssignedReviewers []string `json:"assigned_reviewers"`
+	CreatedAt         *string  `json:"createdAt,omitempty"`
+	MergedAt          *string  `json:"mergedAt,omitempty"`
 }
 
 func MapToPullRequestResponse(pr domain.PullRequest) PullRequestResponse {
@@ -142,14 +140,26 @@ func MapToPullRequestResponse(pr domain.PullRequest) PullRequestResponse {
 		reviewers = append(reviewers, string(reviewer))
 	}
 
+	var createdAt *string
+	if pr.CreatedAt != nil {
+		createdAtFormatted := pr.CreatedAt.UTC().Format("2006-01-02T15:04:05Z")
+		createdAt = &createdAtFormatted
+	}
+
+	var mergedAt *string
+	if pr.MergedAt != nil {
+		mergedAtFormatted := pr.MergedAt.UTC().Format("2006-01-02T15:04:05Z")
+		mergedAt = &mergedAtFormatted
+	}
+
 	return PullRequestResponse{
 		PullRequestID:     string(pr.ID),
 		PullRequestName:   pr.Name,
 		AuthorID:          string(pr.AuthorID),
 		Status:            string(pr.Status),
 		AssignedReviewers: reviewers,
-		CreatedAt:         pr.CreatedAt,
-		MergedAt:          pr.MergedAt,
+		CreatedAt:         createdAt,
+		MergedAt:          mergedAt,
 	}
 }
 
@@ -172,5 +182,31 @@ func MapToReassignPullRequestResponse(pr domain.PullRequest, replacedBy domain.U
 	return ReassignPullRequestResponse{
 		PR:         MapToPullRequestResponse(pr),
 		ReplacedBy: string(replacedBy),
+	}
+}
+
+type HealthResponse struct {
+	Status string `json:"status"`
+}
+
+type TeamStatsResponse struct {
+	TeamName           string `json:"team_name"`
+	MembersCount       int    `json:"members_count"`
+	ActiveMembersCount int    `json:"active_members_count"`
+	TotalPRs           int    `json:"total_prs"`
+	OpenPRs            int    `json:"open_prs"`
+	MergedPRs          int    `json:"merged_prs"`
+	AvgTimeToMergeSec  int64  `json:"avg_time_to_merge_seconds"`
+}
+
+func MapToTeamStatsResponse(s domain.TeamStats) TeamStatsResponse {
+	return TeamStatsResponse{
+		TeamName:           string(s.TeamName),
+		MembersCount:       s.MembersCount,
+		ActiveMembersCount: s.ActiveMembersCount,
+		TotalPRs:           s.TotalPRs,
+		OpenPRs:            s.OpenPRs,
+		MergedPRs:          s.MergedPRs,
+		AvgTimeToMergeSec:  s.AvgTimeToMergeSec,
 	}
 }

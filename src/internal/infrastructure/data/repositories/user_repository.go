@@ -1,7 +1,9 @@
-package data
+package repositories
 
 import (
 	"context"
+
+	"PrService/src/internal/infrastructure/data"
 
 	"PrService/src/internal/domain"
 
@@ -23,7 +25,7 @@ func (r *UserRepository) UpsertBatch(ctx context.Context, users []domain.User) e
 		return nil
 	}
 
-	q := querierFromContext(ctx, r.pool)
+	q := data.QuerierFromContext(ctx, r.pool)
 
 	const query = `
 		INSERT INTO users (id, username, team_name, is_active)
@@ -49,7 +51,7 @@ func (r *UserRepository) UpsertBatch(ctx context.Context, users []domain.User) e
 }
 
 func (r *UserRepository) GetByID(ctx context.Context, id domain.UserID) (*domain.User, error) {
-	q := querierFromContext(ctx, r.pool)
+	q := data.QuerierFromContext(ctx, r.pool)
 
 	const query = `
 		SELECT id, username, team_name, is_active
@@ -64,7 +66,7 @@ func (r *UserRepository) GetByID(ctx context.Context, id domain.UserID) (*domain
 		&u.TeamName,
 		&u.IsActive,
 	); err != nil {
-		if isNoRows(err) {
+		if data.IsNoRows(err) {
 			return nil, domain.ErrUserNotFound
 		}
 		return nil, err
@@ -74,7 +76,7 @@ func (r *UserRepository) GetByID(ctx context.Context, id domain.UserID) (*domain
 }
 
 func (r *UserRepository) Update(ctx context.Context, user *domain.User) error {
-	q := querierFromContext(ctx, r.pool)
+	q := data.QuerierFromContext(ctx, r.pool)
 
 	const query = `
 		UPDATE users

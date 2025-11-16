@@ -1,6 +1,6 @@
 //go:build integration
 
-package data
+package integration_tests
 
 import (
 	"PrService/src/internal/domain"
@@ -16,7 +16,7 @@ import (
 
 var testPool *pgxpool.Pool
 
-const migrationFile = "migrations/0001_create_schema.up.sql"
+const migrationFile = "../migrations/0001_create_schema.up.sql"
 
 func TestMain(m *testing.M) {
 	ctx := context.Background()

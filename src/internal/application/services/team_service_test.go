@@ -302,3 +302,61 @@ func TestTeamService_Get_Error(t *testing.T) {
 		t.Fatalf("expected nil result on error, got %#v", result)
 	}
 }
+
+func TestTeamService_GetStats_Success(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	teamRepo := mocks.NewMockTeamRepository(ctrl)
+
+	svc := NewTeamService(teamRepo, nil, nil)
+
+	ctx := context.Background()
+	teamName := domain.TeamName("backend")
+
+	expected := &domain.TeamStats{
+		TeamName:           teamName,
+		MembersCount:       3,
+		ActiveMembersCount: 2,
+		TotalPRs:           5,
+		OpenPRs:            2,
+		MergedPRs:          3,
+		AvgTimeToMergeSec:  1234,
+	}
+
+	teamRepo.EXPECT().
+		GetStats(ctx, teamName).
+		Return(expected, nil)
+
+	got, err := svc.GetStats(ctx, teamName)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if got != expected {
+		t.Fatalf("expected %+v, got %+v", expected, got)
+	}
+}
+
+func TestTeamService_GetStats_Error(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	teamRepo := mocks.NewMockTeamRepository(ctrl)
+
+	svc := NewTeamService(teamRepo, nil, nil)
+
+	ctx := context.Background()
+	teamName := domain.TeamName("unknown")
+
+	teamRepo.EXPECT().
+		GetStats(ctx, teamName).
+		Return(nil, domain.ErrTeamNotFound)
+
+	got, err := svc.GetStats(ctx, teamName)
+	if got != nil {
+		t.Fatalf("expected nil stats, got %+v", got)
+	}
+	if !errors.Is(err, domain.ErrTeamNotFound) {
+		t.Fatalf("expected ErrTeamNotFound, got %v", err)
+	}
+}

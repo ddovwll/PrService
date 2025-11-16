@@ -32,17 +32,15 @@ type Config struct {
 }
 
 func Load() (*Config, error) {
-	err := godotenv.Load()
-	if err != nil {
-		fmt.Println(err)
-	}
+	//nolint:errcheck // env file is optional
+	_ = godotenv.Load()
 
 	cfg := &Config{
 		HTTPPort:  getEnv("HTTP_PORT", "8080"),
 		LogLevel:  getEnv("LOG_LEVEL", "INFO"),
 		LogFormat: getEnv("LOG_FORMAT", "text"),
 		DB: DBConfig{
-			Host:     getEnv("DB_HOST", "postgres"),
+			Host:     getEnv("DB_HOST", "localhost"),
 			User:     getEnv("DB_USER", "user"),
 			Password: getEnv("DB_PASSWORD", "password"),
 			Name:     getEnv("DB_NAME", "db"),
@@ -50,6 +48,8 @@ func Load() (*Config, error) {
 		},
 		MigrationsDir: getEnv("MIGRATIONS_DIR", "src/internal/infrastructure/data/migrations"),
 	}
+
+	var err error
 
 	if cfg.DB.Port, err = getEnvInt("DB_PORT", 5432); err != nil {
 		return nil, fmt.Errorf("parse DB_PORT: %w", err)

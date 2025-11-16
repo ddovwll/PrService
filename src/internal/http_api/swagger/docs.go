@@ -15,9 +15,27 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/health": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Health check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.HealthResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/pullRequest/create": {
             "post": {
-                "description": "Создать PR и автоматически назначить до 2 ревьюверов из команды автора",
                 "consumes": [
                     "application/json"
                 ],
@@ -27,7 +45,7 @@ const docTemplate = `{
                 "tags": [
                     "PullRequests"
                 ],
-                "summary": "Создать PR",
+                "summary": "Создать PR и автоматически назначить до 2 ревьюверов из команды автора",
                 "parameters": [
                     {
                         "description": "Create pull request body",
@@ -41,31 +59,31 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created",
+                        "description": "PR создан",
                         "schema": {
                             "$ref": "#/definitions/models.PullRequestEnvelopeResponse"
                         }
                     },
                     "400": {
-                        "description": "invalid request body or validation failed",
+                        "description": "Неверный запрос",
                         "schema": {
                             "$ref": "#/definitions/models.ErrorResponse"
                         }
                     },
                     "404": {
-                        "description": "author or team not found",
+                        "description": "Автор/команда не найдены",
                         "schema": {
                             "$ref": "#/definitions/models.ErrorResponse"
                         }
                     },
                     "409": {
-                        "description": "pull request already exists",
+                        "description": "PR уже существует",
                         "schema": {
                             "$ref": "#/definitions/models.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "internal server error",
+                        "description": "Ошибка сервера",
                         "schema": {
                             "$ref": "#/definitions/models.ErrorResponse"
                         }
@@ -75,7 +93,6 @@ const docTemplate = `{
         },
         "/pullRequest/merge": {
             "post": {
-                "description": "Пометить PR как MERGED (идемпотентная операция)",
                 "consumes": [
                     "application/json"
                 ],
@@ -85,7 +102,7 @@ const docTemplate = `{
                 "tags": [
                     "PullRequests"
                 ],
-                "summary": "Пометить PR как MERGED",
+                "summary": "Пометить PR как MERGED (идемпотентная операция)",
                 "parameters": [
                     {
                         "description": "Merge pull request body",
@@ -99,25 +116,25 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "PR в состоянии MERGED",
                         "schema": {
                             "$ref": "#/definitions/models.PullRequestEnvelopeResponse"
                         }
                     },
                     "400": {
-                        "description": "invalid request body or validation failed",
+                        "description": "Неверный запрос",
                         "schema": {
                             "$ref": "#/definitions/models.ErrorResponse"
                         }
                     },
                     "404": {
-                        "description": "pull request not found",
+                        "description": "PR не найден",
                         "schema": {
                             "$ref": "#/definitions/models.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "internal server error",
+                        "description": "Ошибка сервера",
                         "schema": {
                             "$ref": "#/definitions/models.ErrorResponse"
                         }
@@ -127,7 +144,6 @@ const docTemplate = `{
         },
         "/pullRequest/reassign": {
             "post": {
-                "description": "Переназначить конкретного ревьювера на другого из его команды",
                 "consumes": [
                     "application/json"
                 ],
@@ -137,7 +153,7 @@ const docTemplate = `{
                 "tags": [
                     "PullRequests"
                 ],
-                "summary": "Переназначить ревьювера PR",
+                "summary": "Переназначить конкретного ревьювера на другого из его команды",
                 "parameters": [
                     {
                         "description": "Reassign pull request reviewer body",
@@ -151,31 +167,31 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Переназначение выполнено",
                         "schema": {
                             "$ref": "#/definitions/models.ReassignPullRequestResponse"
                         }
                     },
                     "400": {
-                        "description": "invalid request body or validation failed",
+                        "description": "Неверный запрос",
                         "schema": {
                             "$ref": "#/definitions/models.ErrorResponse"
                         }
                     },
                     "404": {
-                        "description": "PR or user not found",
+                        "description": "PR или пользователь не найден",
                         "schema": {
                             "$ref": "#/definitions/models.ErrorResponse"
                         }
                     },
                     "409": {
-                        "description": "domain rule violation",
+                        "description": "Нарушение доменных правил переназначения",
                         "schema": {
                             "$ref": "#/definitions/models.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "internal server error",
+                        "description": "Ошибка сервера",
                         "schema": {
                             "$ref": "#/definitions/models.ErrorResponse"
                         }
@@ -185,7 +201,6 @@ const docTemplate = `{
         },
         "/team/add": {
             "post": {
-                "description": "Создать команду с участниками (создаёт/обновляет пользователей)",
                 "consumes": [
                     "application/json"
                 ],
@@ -195,10 +210,10 @@ const docTemplate = `{
                 "tags": [
                     "Teams"
                 ],
-                "summary": "Создать команду с участниками",
+                "summary": "Создать команду с участниками (создаёт/обновляет пользователей)",
                 "parameters": [
                     {
-                        "description": "Team with members",
+                        "description": "Add team body",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -209,19 +224,19 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created",
+                        "description": "Команда создана",
                         "schema": {
                             "$ref": "#/definitions/models.AddTeamResponse"
                         }
                     },
                     "400": {
-                        "description": "team already exists or invalid request",
+                        "description": "Команда уже существует или неверный запрос",
                         "schema": {
                             "$ref": "#/definitions/models.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "internal server error",
+                        "description": "Ошибка сервера",
                         "schema": {
                             "$ref": "#/definitions/models.ErrorResponse"
                         }
@@ -231,7 +246,6 @@ const docTemplate = `{
         },
         "/team/get": {
             "get": {
-                "description": "Получить команду и список её участников",
                 "consumes": [
                     "application/json"
                 ],
@@ -253,19 +267,68 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Объект команды",
                         "schema": {
                             "$ref": "#/definitions/models.TeamResponse"
                         }
                     },
                     "404": {
-                        "description": "team not found",
+                        "description": "Команда не найдена",
                         "schema": {
                             "$ref": "#/definitions/models.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "internal server error",
+                        "description": "Ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/team/stats": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Teams"
+                ],
+                "summary": "Получить статистику по команде",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Уникальное имя команды",
+                        "name": "team_name",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Статистика по команде",
+                        "schema": {
+                            "$ref": "#/definitions/models.TeamStatsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный запрос",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Команда не найдена",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка сервера",
                         "schema": {
                             "$ref": "#/definitions/models.ErrorResponse"
                         }
@@ -275,7 +338,6 @@ const docTemplate = `{
         },
         "/users/getReview": {
             "get": {
-                "description": "Вернуть список PR'ов, в которых пользователь назначен ревьювером",
                 "consumes": [
                     "application/json"
                 ],
@@ -297,19 +359,19 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Список PR'ов пользователя",
                         "schema": {
                             "$ref": "#/definitions/models.GetUserReviewsResponse"
                         }
                     },
                     "400": {
-                        "description": "missing or invalid user_id",
+                        "description": "отсутствующий или неверный user_id",
                         "schema": {
                             "$ref": "#/definitions/models.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "internal server error",
+                        "description": "Ошибка сервера",
                         "schema": {
                             "$ref": "#/definitions/models.ErrorResponse"
                         }
@@ -319,7 +381,6 @@ const docTemplate = `{
         },
         "/users/setIsActive": {
             "post": {
-                "description": "Установить флаг активности пользователя по его идентификатору",
                 "consumes": [
                     "application/json"
                 ],
@@ -332,7 +393,7 @@ const docTemplate = `{
                 "summary": "Установить флаг активности пользователя",
                 "parameters": [
                     {
-                        "description": "Set user is_active flag",
+                        "description": "Set is active body",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -343,25 +404,25 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Обновлённый пользователь",
                         "schema": {
                             "$ref": "#/definitions/models.SetUserIsActiveResponse"
                         }
                     },
                     "400": {
-                        "description": "invalid request body or validation failed",
+                        "description": "неверный запрос",
                         "schema": {
                             "$ref": "#/definitions/models.ErrorResponse"
                         }
                     },
                     "404": {
-                        "description": "user not found",
+                        "description": "Пользователь не найден",
                         "schema": {
                             "$ref": "#/definitions/models.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "internal server error",
+                        "description": "Ошибка сервера",
                         "schema": {
                             "$ref": "#/definitions/models.ErrorResponse"
                         }
@@ -474,6 +535,14 @@ const docTemplate = `{
                 }
             }
         },
+        "models.HealthResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
         "models.MergePullRequestRequest": {
             "type": "object",
             "required": [
@@ -542,11 +611,11 @@ const docTemplate = `{
         "models.ReassignPullRequestRequest": {
             "type": "object",
             "required": [
-                "old_user_id",
+                "old_reviewer_id",
                 "pull_request_id"
             ],
             "properties": {
-                "old_user_id": {
+                "old_reviewer_id": {
                     "type": "string"
                 },
                 "pull_request_id": {
@@ -633,6 +702,32 @@ const docTemplate = `{
                 }
             }
         },
+        "models.TeamStatsResponse": {
+            "type": "object",
+            "properties": {
+                "active_members_count": {
+                    "type": "integer"
+                },
+                "avg_time_to_merge_seconds": {
+                    "type": "integer"
+                },
+                "members_count": {
+                    "type": "integer"
+                },
+                "merged_prs": {
+                    "type": "integer"
+                },
+                "open_prs": {
+                    "type": "integer"
+                },
+                "team_name": {
+                    "type": "string"
+                },
+                "total_prs": {
+                    "type": "integer"
+                }
+            }
+        },
         "models.UserResponse": {
             "type": "object",
             "properties": {
@@ -655,11 +750,11 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
+	Version:          "1.0.0",
 	Host:             "",
 	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "",
+	Title:            "PR Reviewer Assignment Service (Test Task, Fall 2025)",
 	Description:      "",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
