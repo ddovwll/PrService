@@ -1,16 +1,32 @@
 package main
 
 import (
-	"encoding/json"
+	"context"
 	"fmt"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"PrService/src/cmd/config"
 )
 
 func main() {
-	qwe := struct {
-		A string `json:"a"`
-	}{}
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
-	err := json.Unmarshal([]byte(`{"a":1}`), &qwe)
-	fmt.Println(err)
-	fmt.Println(qwe)
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatalf("failed to load config: %v", err)
+	}
+
+	app, err := NewApp(cfg)
+	if err != nil {
+		log.Fatalf("failed to init app: %v", err)
+	}
+
+	if err := app.Run(ctx); err != nil {
+		fmt.Fprintf(os.Stderr, "app stopped with error: %v\n", err)
+		os.Exit(1)
+	}
 }

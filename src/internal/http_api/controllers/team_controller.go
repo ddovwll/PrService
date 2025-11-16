@@ -35,6 +35,17 @@ func (c *TeamController) UseHandlers(r chi.Router) {
 	r.Get("/team/get", c.get)
 }
 
+// add godoc
+// @Summary      Создать команду с участниками
+// @Description  Создать команду с участниками (создаёт/обновляет пользователей)
+// @Tags         Teams
+// @Accept       json
+// @Produce      json
+// @Param        request  body      models.AddTeamRequest       true  "Team with members"
+// @Success      201      {object}  models.AddTeamResponse
+// @Failure      400      {object}  models.ErrorResponse  "team already exists or invalid request"
+// @Failure      500      {object}  models.ErrorResponse  "internal server error"
+// @Router       /team/add [post]
 func (c *TeamController) add(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -71,6 +82,17 @@ func (c *TeamController) add(w http.ResponseWriter, r *http.Request) {
 	c.writeJSON(ctx, w, http.StatusCreated, resp)
 }
 
+// get godoc
+// @Summary      Получить команду с участниками
+// @Description  Получить команду и список её участников
+// @Tags         Teams
+// @Accept       json
+// @Produce      json
+// @Param        team_name  query     string  true  "Уникальное имя команды"
+// @Success      200        {object}  models.TeamResponse
+// @Failure      404        {object}  models.ErrorResponse  "team not found"
+// @Failure      500        {object}  models.ErrorResponse  "internal server error"
+// @Router       /team/get [get]
 func (c *TeamController) get(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	q := r.URL.Query()

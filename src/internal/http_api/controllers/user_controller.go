@@ -34,6 +34,18 @@ func (c *UserController) UseHandlers(r chi.Router) {
 	r.Get("/users/getReview", c.getReview)
 }
 
+// setIsActive godoc
+// @Summary      Установить флаг активности пользователя
+// @Description  Установить флаг активности пользователя по его идентификатору
+// @Tags         Users
+// @Accept       json
+// @Produce      json
+// @Param        request  body      models.SetUserIsActiveRequest   true  "Set user is_active flag"
+// @Success      200      {object}  models.SetUserIsActiveResponse
+// @Failure      400      {object}  models.ErrorResponse  "invalid request body or validation failed"
+// @Failure      404      {object}  models.ErrorResponse  "user not found"
+// @Failure      500      {object}  models.ErrorResponse  "internal server error"
+// @Router       /users/setIsActive [post]
 func (c *UserController) setIsActive(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -69,6 +81,17 @@ func (c *UserController) setIsActive(w http.ResponseWriter, r *http.Request) {
 	c.writeJSON(ctx, w, http.StatusOK, resp)
 }
 
+// getReview godoc
+// @Summary      Получить PR'ы, где пользователь назначен ревьювером
+// @Description  Вернуть список PR'ов, в которых пользователь назначен ревьювером
+// @Tags         Users
+// @Accept       json
+// @Produce      json
+// @Param        user_id  query     string  true  "Идентификатор пользователя"
+// @Success      200      {object}  models.GetUserReviewsResponse
+// @Failure      400      {object}  models.ErrorResponse  "missing or invalid user_id"
+// @Failure      500      {object}  models.ErrorResponse  "internal server error"
+// @Router       /users/getReview [get]
 func (c *UserController) getReview(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	q := r.URL.Query()
@@ -86,7 +109,8 @@ func (c *UserController) getReview(w http.ResponseWriter, r *http.Request) {
 
 	prs, err := c.userService.GetPrs(ctx, domain.UserID(userIDStr))
 	if err != nil {
-		// todo если не нашлось вернуть пустой список
+		// если не нашлось — сейчас это ошибка сервиса; при необходимости можно
+		// изменить реализацию сервиса, чтобы возвращать пустой список без ошибки.
 		c.writeError(ctx, w, http.StatusInternalServerError,
 			models.ErrorCodeInternalServer,
 			"internal server error",

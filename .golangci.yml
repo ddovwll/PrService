@@ -66,12 +66,12 @@ linters:
       key-naming-case: snake
       no-global: all
     lll:
-      tab-width: 1
+      tab-width: 4
       line-length: 120
   exclusions:
-    generated: lax
     paths:
-      - src/internal/application/mocks
+      - src/internal/application/mocks/
+      - src/internal/http_api/swagger/
 
 issues:
   max-issues-per-linter: 0

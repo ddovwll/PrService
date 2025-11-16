@@ -11,19 +11,19 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type txManager struct {
+type TxManager struct {
 	pool *pgxpool.Pool
 }
 
 func NewTxManager(pool *pgxpool.Pool) contracts.TxManager {
-	return &txManager{pool: pool}
+	return &TxManager{pool: pool}
 }
 
 type contextKey struct{}
 
 var txKey = contextKey{}
 
-func (m *txManager) WithinTransaction(ctx context.Context, fn func(ctx context.Context) error) error {
+func (m *TxManager) WithinTransaction(ctx context.Context, fn func(ctx context.Context) error) error {
 	tx, err := m.pool.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
 		return err

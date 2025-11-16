@@ -35,6 +35,19 @@ func (c *PullRequestController) UseHandlers(r chi.Router) {
 	r.Post("/pullRequest/reassign", c.reassign)
 }
 
+// create godoc
+// @Summary      Создать PR
+// @Description  Создать PR и автоматически назначить до 2 ревьюверов из команды автора
+// @Tags         PullRequests
+// @Accept       json
+// @Produce      json
+// @Param        request  body      models.CreatePullRequestRequest      true  "Create pull request body"
+// @Success      201      {object}  models.PullRequestEnvelopeResponse
+// @Failure      400      {object}  models.ErrorResponse  "invalid request body or validation failed"
+// @Failure      404      {object}  models.ErrorResponse  "author or team not found"
+// @Failure      409      {object}  models.ErrorResponse  "pull request already exists"
+// @Failure      500      {object}  models.ErrorResponse  "internal server error"
+// @Router       /pullRequest/create [post]
 func (c *PullRequestController) create(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -48,7 +61,6 @@ func (c *PullRequestController) create(w http.ResponseWriter, r *http.Request) {
 		req.PullRequestName,
 		domain.UserID(req.AuthorID),
 	)
-
 	if err != nil {
 		if errors.Is(err, domain.ErrUserNotFound) {
 			c.writeError(ctx, w, http.StatusNotFound,
@@ -95,6 +107,18 @@ func (c *PullRequestController) create(w http.ResponseWriter, r *http.Request) {
 	c.writeJSON(ctx, w, http.StatusCreated, resp)
 }
 
+// merge godoc
+// @Summary      Пометить PR как MERGED
+// @Description  Пометить PR как MERGED (идемпотентная операция)
+// @Tags         PullRequests
+// @Accept       json
+// @Produce      json
+// @Param        request  body      models.MergePullRequestRequest      true  "Merge pull request body"
+// @Success      200      {object}  models.PullRequestEnvelopeResponse
+// @Failure      400      {object}  models.ErrorResponse  "invalid request body or validation failed"
+// @Failure      404      {object}  models.ErrorResponse  "pull request not found"
+// @Failure      500      {object}  models.ErrorResponse  "internal server error"
+// @Router       /pullRequest/merge [post]
 func (c *PullRequestController) merge(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -104,7 +128,6 @@ func (c *PullRequestController) merge(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pr, err := c.pullRequestService.Merge(ctx, domain.PullRequestID(req.PullRequestID))
-
 	if err != nil {
 		if errors.Is(err, domain.ErrPullRequestNotFound) {
 			c.writeError(ctx, w, http.StatusNotFound,
@@ -131,6 +154,19 @@ func (c *PullRequestController) merge(w http.ResponseWriter, r *http.Request) {
 	c.writeJSON(ctx, w, http.StatusOK, resp)
 }
 
+// reassign godoc
+// @Summary      Переназначить ревьювера PR
+// @Description  Переназначить конкретного ревьювера на другого из его команды
+// @Tags         PullRequests
+// @Accept       json
+// @Produce      json
+// @Param        request  body      models.ReassignPullRequestRequest   true  "Reassign pull request reviewer body"
+// @Success      200      {object}  models.ReassignPullRequestResponse
+// @Failure      400      {object}  models.ErrorResponse  "invalid request body or validation failed"
+// @Failure      404      {object}  models.ErrorResponse  "PR or user not found"
+// @Failure      409      {object}  models.ErrorResponse  "domain rule violation"
+// @Failure      500      {object}  models.ErrorResponse  "internal server error"
+// @Router       /pullRequest/reassign [post]
 func (c *PullRequestController) reassign(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -143,7 +179,6 @@ func (c *PullRequestController) reassign(w http.ResponseWriter, r *http.Request)
 		domain.PullRequestID(req.PullRequestID),
 		domain.UserID(req.OldUserID),
 	)
-
 	if err != nil {
 		if errors.Is(err, domain.ErrPullRequestNotFound) {
 			c.writeError(ctx, w, http.StatusNotFound,

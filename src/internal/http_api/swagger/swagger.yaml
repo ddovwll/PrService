@@ -1,0 +1,425 @@
+definitions:
+  models.AddTeamRequest:
+    properties:
+      members:
+        items:
+          $ref: '#/definitions/models.TeamMemberRequest'
+        type: array
+      team_name:
+        type: string
+    required:
+    - members
+    - team_name
+    type: object
+  models.AddTeamResponse:
+    properties:
+      team:
+        $ref: '#/definitions/models.TeamResponse'
+    type: object
+  models.CreatePullRequestRequest:
+    properties:
+      author_id:
+        type: string
+      pull_request_id:
+        type: string
+      pull_request_name:
+        type: string
+    required:
+    - author_id
+    - pull_request_id
+    - pull_request_name
+    type: object
+  models.ErrorBody:
+    properties:
+      code:
+        $ref: '#/definitions/models.ErrorCode'
+      message:
+        type: string
+    type: object
+  models.ErrorCode:
+    enum:
+    - TEAM_EXISTS
+    - PR_EXISTS
+    - PR_MERGED
+    - NOT_ASSIGNED
+    - NO_CANDIDATE
+    - NOT_FOUND
+    - DECODE_FAILED
+    - VALIDATION_FAILED
+    - INTERNAL_SERVER_ERROR
+    type: string
+    x-enum-varnames:
+    - ErrorCodeTeamExists
+    - ErrorCodePRExists
+    - ErrorCodePRMerged
+    - ErrorCodeNotAssigned
+    - ErrorCodeNoCandidate
+    - ErrorCodeNotFound
+    - ErrorCodeDecodeFailed
+    - ErrorCodeValidationFailed
+    - ErrorCodeInternalServer
+  models.ErrorResponse:
+    properties:
+      error:
+        $ref: '#/definitions/models.ErrorBody'
+    type: object
+  models.GetUserReviewsResponse:
+    properties:
+      pull_requests:
+        items:
+          $ref: '#/definitions/models.PullRequestShortResponse'
+        type: array
+      user_id:
+        type: string
+    type: object
+  models.MergePullRequestRequest:
+    properties:
+      pull_request_id:
+        type: string
+    required:
+    - pull_request_id
+    type: object
+  models.PullRequestEnvelopeResponse:
+    properties:
+      pr:
+        $ref: '#/definitions/models.PullRequestResponse'
+    type: object
+  models.PullRequestResponse:
+    properties:
+      assigned_reviewers:
+        items:
+          type: string
+        type: array
+      author_id:
+        type: string
+      createdAt:
+        type: string
+      mergedAt:
+        type: string
+      pull_request_id:
+        type: string
+      pull_request_name:
+        type: string
+      status:
+        type: string
+    type: object
+  models.PullRequestShortResponse:
+    properties:
+      author_id:
+        type: string
+      pull_request_id:
+        type: string
+      pull_request_name:
+        type: string
+      status:
+        type: string
+    type: object
+  models.ReassignPullRequestRequest:
+    properties:
+      old_user_id:
+        type: string
+      pull_request_id:
+        type: string
+    required:
+    - old_user_id
+    - pull_request_id
+    type: object
+  models.ReassignPullRequestResponse:
+    properties:
+      pr:
+        $ref: '#/definitions/models.PullRequestResponse'
+      replaced_by:
+        type: string
+    type: object
+  models.SetUserIsActiveRequest:
+    properties:
+      is_active:
+        type: boolean
+      user_id:
+        type: string
+    required:
+    - user_id
+    type: object
+  models.SetUserIsActiveResponse:
+    properties:
+      user:
+        $ref: '#/definitions/models.UserResponse'
+    type: object
+  models.TeamMemberRequest:
+    properties:
+      is_active:
+        type: boolean
+      user_id:
+        type: string
+      username:
+        type: string
+    required:
+    - user_id
+    - username
+    type: object
+  models.TeamMemberResponse:
+    properties:
+      is_active:
+        type: boolean
+      user_id:
+        type: string
+      username:
+        type: string
+    type: object
+  models.TeamResponse:
+    properties:
+      members:
+        items:
+          $ref: '#/definitions/models.TeamMemberResponse'
+        type: array
+      team_name:
+        type: string
+    type: object
+  models.UserResponse:
+    properties:
+      is_active:
+        type: boolean
+      team_name:
+        type: string
+      user_id:
+        type: string
+      username:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /pullRequest/create:
+    post:
+      consumes:
+      - application/json
+      description: Создать PR и автоматически назначить до 2 ревьюверов из команды
+        автора
+      parameters:
+      - description: Create pull request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreatePullRequestRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.PullRequestEnvelopeResponse'
+        "400":
+          description: invalid request body or validation failed
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: author or team not found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "409":
+          description: pull request already exists
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Создать PR
+      tags:
+      - PullRequests
+  /pullRequest/merge:
+    post:
+      consumes:
+      - application/json
+      description: Пометить PR как MERGED (идемпотентная операция)
+      parameters:
+      - description: Merge pull request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.MergePullRequestRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.PullRequestEnvelopeResponse'
+        "400":
+          description: invalid request body or validation failed
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: pull request not found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Пометить PR как MERGED
+      tags:
+      - PullRequests
+  /pullRequest/reassign:
+    post:
+      consumes:
+      - application/json
+      description: Переназначить конкретного ревьювера на другого из его команды
+      parameters:
+      - description: Reassign pull request reviewer body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ReassignPullRequestRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ReassignPullRequestResponse'
+        "400":
+          description: invalid request body or validation failed
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: PR or user not found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "409":
+          description: domain rule violation
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Переназначить ревьювера PR
+      tags:
+      - PullRequests
+  /team/add:
+    post:
+      consumes:
+      - application/json
+      description: Создать команду с участниками (создаёт/обновляет пользователей)
+      parameters:
+      - description: Team with members
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.AddTeamRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.AddTeamResponse'
+        "400":
+          description: team already exists or invalid request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Создать команду с участниками
+      tags:
+      - Teams
+  /team/get:
+    get:
+      consumes:
+      - application/json
+      description: Получить команду и список её участников
+      parameters:
+      - description: Уникальное имя команды
+        in: query
+        name: team_name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.TeamResponse'
+        "404":
+          description: team not found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Получить команду с участниками
+      tags:
+      - Teams
+  /users/getReview:
+    get:
+      consumes:
+      - application/json
+      description: Вернуть список PR'ов, в которых пользователь назначен ревьювером
+      parameters:
+      - description: Идентификатор пользователя
+        in: query
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.GetUserReviewsResponse'
+        "400":
+          description: missing or invalid user_id
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Получить PR'ы, где пользователь назначен ревьювером
+      tags:
+      - Users
+  /users/setIsActive:
+    post:
+      consumes:
+      - application/json
+      description: Установить флаг активности пользователя по его идентификатору
+      parameters:
+      - description: Set user is_active flag
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.SetUserIsActiveRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SetUserIsActiveResponse'
+        "400":
+          description: invalid request body or validation failed
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: user not found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Установить флаг активности пользователя
+      tags:
+      - Users
+swagger: "2.0"
