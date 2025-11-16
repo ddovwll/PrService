@@ -3,11 +3,11 @@ INTEGRATION_PKG ?= ./src/internal/infrastructure/data/integration_tests
 
 .PHONY: test unit test-integration test-all
 
-api:
-	go run ./src/cmd/http_api
-
 up:
 	docker-compose up
+
+api:
+	go run ./src/cmd/http_api
 
 migrate:
 	go run ./src/cmd/migrator
