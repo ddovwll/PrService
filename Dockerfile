@@ -9,8 +9,8 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /app/http_api ./src/cmd/http_api
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /app/migrator ./src/cmd/migrator
+RUN CGO_ENABLED=0 go build -o /app/http_api ./src/cmd/http_api
+RUN CGO_ENABLED=0 go build -o /app/migrator ./src/cmd/migrator
 
 FROM alpine:3.20
 
